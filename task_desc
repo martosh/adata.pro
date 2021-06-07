@@ -1,4 +1,5 @@
-Collect data from https://gplay.bg/. We are interested in products that are listed in two categories – “Периферия” and “Хардуер”. Every category has several subcategories. Your goal is to crawl (navigate) through all of them, and scrape all of the products, that meet the following criteria:
+Collect data from https://gplay.bg/. We are interested in products that are listed in two categories – “Периферия” and “Хардуер”. 
+Every category has several subcategories. Your goal is to crawl (navigate) through all of them, and scrape all of the products, that meet the following criteria:
 •	it has to be available (has status – “наличен”)
 •	it costs less than 200 leva (doesn’t metter if the product is in promotion or not)
 
