@@ -1,0 +1,41 @@
+Collect data from https://gplay.bg/. We are interested in products that are listed in two categories – “Периферия” and “Хардуер”. Every category has several subcategories. Your goal is to crawl (navigate) through all of them, and scrape all of the products, that meet the following criteria:
+•	it has to be available (has status – “наличен”)
+•	it costs less than 200 leva (doesn’t metter if the product is in promotion or not)
+
+For each of them you can collect the information listed below:
+(Lets take this mouse for example: https://gplay.bg/spartan-gear-talos)
+•	category – “периферия”
+•	subcategory - “геймърски-мишки”
+•	title - “Spartan Gear Talos” 
+•	subtitle - “Геймърска мишка Spartan Gear Talos, черен”
+•	product number – “SG-033885”
+•	price – “15.00”
+
+Requirements:
+•	use scrapy framework to retrieve the data
+•	create and implement JSON Schema validation pipeline for processed items
+•	use sqlite3 to store the data (Design your application wisely, so it can store every product just ONCE in database, no matter how many times user executes it.)
+
+TIP: Prices can change in time, try to track that change and keep your database up to date.
+
+###########################
+Data delivery
+###########################
+
+Create REST API, that uses collected data and returns JSON object (or list of objects) with the fallowing endpoints:
+•	list - returns a JSON list of all collected products
+•	search – search by Title, returns found products
+•	<id> - returns a JSON object for product, based on its database id
+
+Requirements:
+•	use Django
+•	use pagination if list has more than 10 elements (returns max 10 elements per page)
+•	use token authentication
+•	create admin panel to manage users
+
+Other requirements:
+•	use python >= 3.8
+•	use git
+•	upload your project on github
+•	create README.md documentation for your script (description, how to use it, etc)
+
