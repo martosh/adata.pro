@@ -2,16 +2,37 @@
 import scrapy
 import logging
 import re
+import json
+from itemadapter import ItemAdapter
+import jsonschema 
 
+#### start with ####
 #scrapy runspider scrp_gplay.py -o result.jl
 
-class BlogSpider(scrapy.Spider):
+#######################
+# read schema onese
+#######################
+def get_schema(jfile):
+    with open(jfile, 'r') as file:
+        schema = json.load(file)
+    return schema
+
+json_schema = get_schema('json_schema');
+
+##################################
+class GplaySpider(scrapy.Spider):
     name = 'gplay'
     start_urls = [ 'https://gplay.bg/гейминг-периферия', 'https://gplay.bg/гейминг-хардуер' ]
 
     custom_settings = {
-            'FEED_EXPORT_ENCODING' : 'utf-8'
+            'FEED_EXPORT_ENCODING' : 'utf-8',
+            'DOWNLOAD_FAIL_ON_DATALOSS' : 'False',
+            'ITEM_PIPELINES' : {
+                'scrp_gplay.JsonValidationPipeline': 300,
+#               'scrp_gplay.AddToDbPipeline': 400,
+        }
     }  
+
 
     ###########################
     def parse(self, response):
@@ -78,4 +99,18 @@ class BlogSpider(scrapy.Spider):
 
         return float(product_price)
             
+############################
+# JsonValidation Class Pipel
+############################
+class JsonValidationPipeline:
+
+    def process_item(self, item, spider):
+        item = ItemAdapter(item).asdict()
+        logging.warning(item)
+        try: 
+            jsonschema.validate(instance=item, schema=json_schema)
+        except jsonschema.exceptions.ValidationError as e:
+            print( f"Error: invalid json against schema:[{e}]")
+
+        return item
          

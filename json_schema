@@ -1,0 +1,35 @@
+{
+  "type": "object",
+  "properties": {
+    "category": {
+      "type": "string"
+    },
+    "subcategory": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "subtitle": {
+      "type": "string"
+    },
+    "product_number": {
+      "type": "string"
+    },
+    "price": {
+      "type": "number"
+    },
+    "source_url": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "category",
+    "subcategory",
+    "title",
+    "subtitle",
+    "product_number",
+    "price",
+    "source_url"
+  ]
+}
