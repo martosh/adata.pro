@@ -5,19 +5,48 @@ import re
 import json
 from itemadapter import ItemAdapter
 import jsonschema 
+import sqlite3
+from sqlite3 import Error
+import os
 
+######################
 #### start with ####
 #scrapy runspider scrp_gplay.py -o result.jl
 
 #######################
-# read schema onese
+# read schema once
 #######################
 def get_schema(jfile):
+    if not os.path.isfile('./' + jfile):
+          raise OSError(f"json schema file[{jfile}] is missing!")
+
     with open(jfile, 'r') as file:
         schema = json.load(file)
     return schema
 
-json_schema = get_schema('json_schema');
+json_schema = get_schema('json_schema.json')
+
+######################
+# sqlite
+######################
+def connect_db(db_file):
+    try:
+        conn = sqlite3.connect(db_file)
+    except Error as e:
+        print(e)
+
+    csr = conn.cursor()
+    csr.execute('''CREATE TABLE IF NOT EXISTS items
+    (category text, subcategory text, title text, subtitle text, product_number text primary key, price real, source_url text)''')
+   
+    db_price_indexes = {}
+
+    for row in csr.execute('SELECT product_number, price FROM items'):
+        db_price_indexes[row[0]] = row[1]
+
+    return conn, csr, db_price_indexes
+
+conn, csr, db_price_indexes = connect_db('gplay.db')
 
 ##################################
 class GplaySpider(scrapy.Spider):
@@ -29,10 +58,9 @@ class GplaySpider(scrapy.Spider):
             'DOWNLOAD_FAIL_ON_DATALOSS' : 'False',
             'ITEM_PIPELINES' : {
                 'scrp_gplay.JsonValidationPipeline': 300,
-#               'scrp_gplay.AddToDbPipeline': 400,
+                'scrp_gplay.AddToDbPipeline': 400,
         }
     }  
-
 
     ###########################
     def parse(self, response):
@@ -81,7 +109,7 @@ class GplaySpider(scrapy.Spider):
             data[key] = data[key].strip();
 
         yield data;
-        #logging.warning("Show me data :" )
+        #logging.warning(" Show me data :" )
         #logging.warning( data )
     
     ###################
@@ -94,23 +122,54 @@ class GplaySpider(scrapy.Spider):
         if product_price is not None:
             product_price = re.findall(r'="([^"]+?)"', product_price)[0]
         else:
-            logging.warning(f"missing products price for url[{product_body.url}]")
             product_price = None;
 
         return float(product_price)
             
 ############################
-# JsonValidation Class Pipel
+# JsonValidation Class PipeL
 ############################
 class JsonValidationPipeline:
 
     def process_item(self, item, spider):
         item = ItemAdapter(item).asdict()
-        logging.warning(item)
         try: 
             jsonschema.validate(instance=item, schema=json_schema)
         except jsonschema.exceptions.ValidationError as e:
             print( f"Error: invalid json against schema:[{e}]")
+        else:
+            print('test');
 
         return item
-         
+
+############################
+# Data to DB PipeL
+############################
+class AddToDbPipeline:
+
+    def process_item(self, item, spider):
+        item = ItemAdapter(item).asdict()
+        product_n = item['product_number']
+
+        #NOTE execute commit here or at the end -  depends how stable is the app/web-site
+        if product_n in db_price_indexes:
+
+            #update if prod exists and price diff
+            if item['price'] != db_price_indexes[product_n]:
+                sql = "UPDATE items SET price = ? WHERE product_number = ?"
+                udata = (item['price'], product_n)
+                csr.execute(sql, udata)
+                conn.commit()
+        else:
+            data = (item['category'], item['subcategory'], item['title'], item['subtitle'], item['product_number'],item['price'], item['source_url'] )
+            sql = ''' INSERT INTO items (category, subcategory, title, subtitle, product_number, price, source_url )  VALUES(?,?,?,?,?,?,?) '''
+            csr.execute(sql, data)
+            conn.commit()
+
+        return item
+
+####################
+# commit close
+####################
+conn.commit()
+#conn.close() #closes anyway
