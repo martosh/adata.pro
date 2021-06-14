@@ -43,7 +43,7 @@ create new regular user and new token for authentication (from the user admin pa
 
 ## REST API endpoints and usage:
 You must add a custom header that looks like that(where you must replace the token with yours):\
-Authorization:  Token 250fc146642b11403a430f006a4372d28ffb1548
+Authorization:  Token 250test_token123123asdasd
 
 `http://127.0.0.1:8000/gapi/items/search/<title>`\
 __example__: `http://127.0.0.1:8000/gapi/items/search/JBL`
