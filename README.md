@@ -35,6 +35,7 @@ djangorestframework
 ## First start:
 
 First time starting:\
+create link for db(gplay.db) in your main "gplay" django project dir `ls -s <db_path> gplay.db`\
 you must make a migration `python manage.py makemigrations`, `python manage.py migrate`\
 create super user `python manage.py createsuperuser`\
 create new regular user and new token for authentication (from the user admin panel http://127.0.0.1:8000/admin/ - top right corner)
