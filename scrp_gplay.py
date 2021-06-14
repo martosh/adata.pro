@@ -9,9 +9,12 @@ import sqlite3
 from sqlite3 import Error
 import os
 
-######################
-#### start with ####
+##########################
+#### start and config ####
 #scrapy runspider scrp_gplay.py -o result.jl
+
+db_name = 'gplay.db'
+json_schema_name = 'json_schema.json'
 
 #######################
 # read schema once
@@ -24,11 +27,13 @@ def get_schema(jfile):
         schema = json.load(file)
     return schema
 
-json_schema = get_schema('json_schema.json')
+json_schema = get_schema(json_schema_name)
 
 ######################
 # sqlite
 ######################
+# Creates db if not created
+# returns db connection and cursor, and index/dict{ product_number : price  }
 def connect_db(db_file):
     try:
         conn = sqlite3.connect(db_file)
@@ -46,9 +51,10 @@ def connect_db(db_file):
 
     return conn, csr, db_price_indexes
 
-conn, csr, db_price_indexes = connect_db('gplay.db')
+conn, csr, db_price_indexes = connect_db(db_name)
 
 ##################################
+#actual scrapy spider
 class GplaySpider(scrapy.Spider):
     name = 'gplay'
     start_urls = [ 'https://gplay.bg/гейминг-периферия', 'https://gplay.bg/гейминг-хардуер' ]
@@ -129,6 +135,7 @@ class GplaySpider(scrapy.Spider):
 ############################
 # JsonValidation Class PipeL
 ############################
+#validating scraped data against json schema
 class JsonValidationPipeline:
 
     def process_item(self, item, spider):
@@ -145,13 +152,14 @@ class JsonValidationPipeline:
 ############################
 # Data to DB PipeL
 ############################
+# Insert/Update data to db
 class AddToDbPipeline:
 
     def process_item(self, item, spider):
         item = ItemAdapter(item).asdict()
         product_n = item['product_number']
 
-        #NOTE execute commit here or at the end -  depends how stable is the app/web-site
+        #NOTE execute commit here or at the end of script -  depends how stable is the app/web-site
         if product_n in db_price_indexes:
 
             #update if prod exists and price diff
